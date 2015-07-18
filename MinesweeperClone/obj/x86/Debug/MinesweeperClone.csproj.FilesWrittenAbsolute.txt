@@ -1,0 +1,5 @@
+/home/greg/MinesweeperClone/MinesweeperClone/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/home/greg/MinesweeperClone/MinesweeperClone/bin/Debug/MinesweeperClone.exe.mdb
+/home/greg/MinesweeperClone/MinesweeperClone/bin/Debug/MinesweeperClone.exe
+/home/greg/MinesweeperClone/MinesweeperClone/obj/x86/Debug/MinesweeperClone.exe
+/home/greg/MinesweeperClone/MinesweeperClone/obj/x86/Debug/MinesweeperClone.exe.mdb
