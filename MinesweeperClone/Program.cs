@@ -13,7 +13,7 @@ public class MainForm : System.Windows.Forms.Form
 	private List<GridSquare> grid;
 	private int increment = 0;
 	private Point lastClick = new Point ();
-	private static int dimension = 5;
+	private static int dimension = 15;
 	private Random rndm = new Random ();
 	private static int squareSpacing = 30;
 	private static int squareSize = squareSpacing;
@@ -64,11 +64,6 @@ public class MainForm : System.Windows.Forms.Form
 	private void InitializeComponent()
 	{
 		this.components = new System.ComponentModel.Container ();
-		this.timer = new System.Windows.Forms.Timer (this.components);
-		//this.timer.Enabled = true;
-		this.timer.Interval = 100;
-		this.timer.Tick += new System.EventHandler (this.timer_Tick);
-
 		this.MouseDown += new System.Windows.Forms.MouseEventHandler (this.Form_MouseDown);
 
 		this.AutoScaleBaseSize = new System.Drawing.Size (6, 15);
@@ -91,18 +86,28 @@ public class MainForm : System.Windows.Forms.Form
 		menuReset.Click += new System.EventHandler (this.MenuResetClick);
 		menuQuit.Click += new System.EventHandler (this.MenuQuitClick);
 
+
 		MenuItem menuOptions = new MenuItem ("&Options");
-		MenuItem menuDimensions = new MenuItem ("&Set Dimension");
+		MenuItem menuConfigure = new MenuItem ("&Configure");
+
+		menuConfigure.Click += new System.EventHandler (this.MenuConfigClick);
 
 		menu.MenuItems.Add (menuFile);
 		menuFile.MenuItems.Add (menuReset);
 		menuFile.MenuItems.Add (menuQuit);
 
 		menu.MenuItems.Add (menuOptions);
-		menuOptions.MenuItems.Add (menuDimensions);
+		menuOptions.MenuItems.Add (menuConfigure);
 
 		this.Menu = menu;
 
+	}
+
+	private void MenuConfigClick(object sender, System.EventArgs e)
+	{
+		Console.Write ("click");
+		ConfigWindow cfg = new ConfigWindow (this);
+		cfg.Show ();
 	}
 
 	private void MenuResetClick(object sender, System.EventArgs e)
@@ -119,8 +124,6 @@ public class MainForm : System.Windows.Forms.Form
 		Application.Run(new MainForm());
 	}
 
-	private System.Windows.Forms.Timer timer;
-
 	private void MainForm_Load(object sender, System.EventArgs e)
 	{
 		this.BackColor = Color.FromArgb (255, 240, 240, 210);
@@ -129,7 +132,6 @@ public class MainForm : System.Windows.Forms.Form
 
 	private void ResetGame()
 	{
-		Console.Write ("menu test");
 		grid = new List<GridSquare>();
 		mineCount = 0;
 		unrevealedCount = fieldCount;
@@ -161,8 +163,6 @@ public class MainForm : System.Windows.Forms.Form
 		}
 		lastClick.X = e.X;
 		lastClick.Y = e.Y;
-		Console.Write (String.Concat(String.Concat(String.Concat(lastClick.X, ", "), lastClick.Y),"\n"));
-		Console.Write (this.ClientSize);
 		CheckWinState ();
 		GraphicsUpdate ();
 	}
@@ -189,11 +189,6 @@ public class MainForm : System.Windows.Forms.Form
 		if (tarGS.minedState == false) 
 		{
 			unrevealedCount--;
-			Console.Write ("\n");
-			Console.Write (unrevealedCount);
-			Console.Write ("\n");
-			Console.Write (mineCount);
-			Console.Write ("\n\n");
 			tarGS.viewState = ViewState.Show;
 			AutoReveal (tarGS);
 		} 
@@ -301,8 +296,6 @@ public class MainForm : System.Windows.Forms.Form
 		{
 			increment = 0;
 		}
-
-		Console.Write(increment + "\n");
 	}
 
 	private Rectangle AddPixelsToRectangle(Rectangle inputRectangle, int xPixels, int yPixels)
@@ -342,7 +335,6 @@ public class MainForm : System.Windows.Forms.Form
 	private void DrawMine(Rectangle drawArea, Graphics graphics)
 	{
 		SolidBrush blackBrush = new SolidBrush (Color.Black);
-		SolidBrush greyBrush = new SolidBrush (Color.Gray);
 		Rectangle ellipseRectangle = new Rectangle (
 			                             drawArea.X + drawArea.Width / 4, 
 			                             drawArea.Y + drawArea.Height / 4,
@@ -472,7 +464,109 @@ public class MainForm : System.Windows.Forms.Form
 
 }
 
+public class ConfigWindow: System.Windows.Forms.Form
+{
+	private System.ComponentModel.IContainer components;
+	private int nextPanel = 15;
+	Panel setSquareSizePanel;
+	Panel setDimPanel;
+	Panel buttonPanel;
+	MainForm parent;
+	public ConfigWindow(MainForm parent)
+	{
+		InitializeComponent();
+		this.parent = parent;
+		DimSetInit (nextPanel);
+		nextPanel = this.setDimPanel.Bottom + 15;
+		SquareSizeInit (nextPanel);
+		nextPanel = this.setSquareSizePanel.Bottom + 15;
+	}
 
+	private void ButtonInit(int y)
+	{
+		buttonPanel = new Panel ();
+		buttonPanel.Top = y;
+		buttonPanel.MinimumSize = new Size (10, 10);
+		buttonPanel.AutoSize = true;
+		buttonPanel.BorderStyle = BorderStyle.FixedSingle;
+		this.Controls.Add (buttonPanel);
+
+		Button applyButton = new Button ();
+		applyButton.Text = "Apply";
+	}
+
+	private void SquareSizeInit(int y)
+	{
+		setSquareSizePanel = new Panel ();
+		setSquareSizePanel.Top = y;
+		setSquareSizePanel.MinimumSize = new Size(10,10);
+		setSquareSizePanel.AutoSize = true;
+		setSquareSizePanel.BorderStyle = BorderStyle.FixedSingle;
+		this.Controls.Add (setSquareSizePanel);
+
+		Label setSquareSizeLabel = new Label ();
+		int setSquareSizeLabelX = 0;
+		int setSquareSizeLabelY = 0;
+		setSquareSizeLabel.Location = new Point (setSquareSizeLabelX, setSquareSizeLabelY);
+		setSquareSizeLabel.Text = "Set square size (px):";
+		setSquareSizeLabel.AutoSize = true;
+		setSquareSizeLabel.BorderStyle = BorderStyle.FixedSingle;
+		setSquareSizePanel.Controls.Add (setSquareSizeLabel);
+
+		NumericUpDown setSquareSizeField = new NumericUpDown ();
+		int setSquareSizeFieldX = setSquareSizeLabel.Right + 5;
+		setSquareSizeField.Location = new Point (setSquareSizeFieldX, setSquareSizeLabelY);
+		setSquareSizeField.BorderStyle = BorderStyle.FixedSingle;
+		setSquareSizePanel.Controls.Add (setSquareSizeField);
+	}
+
+	private void DimSetInit(int y)
+	{
+		setDimPanel = new Panel ();
+		setDimPanel.Top = y;
+		setDimPanel.AutoSize = true;
+		setDimPanel.BorderStyle = BorderStyle.FixedSingle;
+		setDimPanel.MinimumSize = new Size(10,10);
+		this.Controls.Add (setDimPanel);
+
+		Label setDimLabel = new Label ();
+		setDimLabel.Text = "Set grid dimensions:";
+
+		int setDimLabelX = 0;
+		int setDimLabelY = 0;
+		setDimLabel.Location = new Point (setDimLabelX, setDimLabelY);
+		setDimLabel.AutoSize = true;
+		setDimPanel.Controls.Add (setDimLabel);
+
+		setDimLabel.BorderStyle = BorderStyle.FixedSingle;
+
+		NumericUpDown setDimField = new NumericUpDown ();
+		int setDimFieldX = setDimLabel.Right + 5;
+
+		setDimField.Location = new Point (setDimFieldX, setDimLabelY);
+		setDimField.BorderStyle = BorderStyle.FixedSingle;
+		setDimPanel.Controls.Add (setDimField);
+	}
+
+	private void InitializeComponent()
+	{
+		this.components = new System.ComponentModel.Container ();
+
+		this.MouseDown += new System.Windows.Forms.MouseEventHandler (this.Form_MouseDown);
+
+		this.AutoScaleBaseSize = new System.Drawing.Size (6, 15);
+
+		this.Name = "Configure";
+
+		this.Load += new System.EventHandler(this.MainForm_Load);
+	}
+	public void MainForm_Load(object sender, System.EventArgs e)
+	{
+	}
+	private void Form_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+	{
+	}
+}
 
 public class GridSquare
 {
