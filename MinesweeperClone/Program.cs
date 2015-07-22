@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
+using System.Media;
 
 public class MainForm : System.Windows.Forms.Form
 {
@@ -13,13 +14,14 @@ public class MainForm : System.Windows.Forms.Form
 	private List<GridSquare> grid;
 	private int increment = 0;
 	private Point lastClick = new Point ();
-	private static int dimension = 15;
+	private int dimension = 15;
 	private Random rndm = new Random ();
-	private static int squareSpacing = 30;
-	private static int squareSize = squareSpacing;
+	private int squareSpacing = 30;
+	private int squareSize;
 	private bool gameOver = false;
 
-	private static int fieldCount = dimension * dimension;
+
+	private int fieldCount;
 
 	private int mineCount;
 	private int unrevealedCount;
@@ -73,6 +75,8 @@ public class MainForm : System.Windows.Forms.Form
 		AddMenu ();
 		this.Load += new System.EventHandler(this.MainForm_Load);
 		this.Paint += new System.Windows.Forms.PaintEventHandler (this.MainForm_Paint);
+
+
 	}
 
 	public void AddMenu()
@@ -130,17 +134,21 @@ public class MainForm : System.Windows.Forms.Form
 		this.ClientSize = new System.Drawing.Size(squareSpacing * dimension,(squareSpacing * dimension));
 	}
 
-	private void ResetGame()
+	public void ResetGame()
 	{
 		grid = new List<GridSquare>();
 		mineCount = 0;
+		fieldCount = dimension * dimension;
 		unrevealedCount = fieldCount;
 		PopulateGrid (grid);
+		squareSize = squareSpacing;
+		fieldCount = dimension * dimension;
 		GraphicsUpdate ();
 	}
 
 	private void Form_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
 	{
+
 		//int targetIndex = -1;
 		for (int i = 0; i < grid.Count; i++)
 		{
@@ -157,6 +165,7 @@ public class MainForm : System.Windows.Forms.Form
 				if (e.Button == MouseButtons.Right) 
 				{
 					FlagToggle (grid [i]);
+
 				}
 				
 			}
@@ -188,6 +197,7 @@ public class MainForm : System.Windows.Forms.Form
 
 		if (tarGS.minedState == false) 
 		{
+
 			unrevealedCount--;
 			tarGS.viewState = ViewState.Show;
 			AutoReveal (tarGS);
@@ -450,7 +460,7 @@ public class MainForm : System.Windows.Forms.Form
 	}
 
 
-	private void GraphicsUpdate()
+	public void GraphicsUpdate()
 	{
 		CycleIncrement ();
 		DrawGrid (CreateGraphics());
@@ -462,6 +472,29 @@ public class MainForm : System.Windows.Forms.Form
 		CycleIncrement ();
 	}
 
+	public int GetSquareSpacing()
+	{
+		return squareSpacing;
+	}
+	public void SetSquareSpacing(int square_spacing)
+	{
+
+		this.squareSpacing = square_spacing;
+		this.squareSize = this.squareSpacing;
+		this.ClientSize = new System.Drawing.Size(squareSpacing * dimension,(squareSpacing * dimension));
+	}
+
+	public int GetGridDimension()
+	{
+		return dimension;
+	}
+	public void SetGridDimension(int newDimension)
+	{
+		this.dimension = newDimension;
+
+		this.ClientSize = new System.Drawing.Size(squareSpacing * dimension,(squareSpacing * dimension));
+	}
+
 }
 
 public class ConfigWindow: System.Windows.Forms.Form
@@ -471,15 +504,42 @@ public class ConfigWindow: System.Windows.Forms.Form
 	Panel setSquareSizePanel;
 	Panel setDimPanel;
 	Panel buttonPanel;
+
+	Button applyButton;
+	Button cancelButton;
+
+	NumericUpDown setDimField;
+	NumericUpDown setSquareSizeField;
+
 	MainForm parent;
 	public ConfigWindow(MainForm parent)
 	{
 		InitializeComponent();
 		this.parent = parent;
+		this.MinimumSize = new Size (10, 10);
+		this.AutoSize = true;
 		DimSetInit (nextPanel);
 		nextPanel = this.setDimPanel.Bottom + 15;
 		SquareSizeInit (nextPanel);
 		nextPanel = this.setSquareSizePanel.Bottom + 15;
+		ButtonInit (nextPanel);
+	}
+
+	private void ApplyFunction(object sender, EventArgs e)
+	{
+		this.parent.SetGridDimension ((int)this.setDimField.Value);
+		this.parent.SetSquareSpacing((int)this.setSquareSizeField.Value);
+		if ((int)this.setDimField.Value != this.parent.GetGridDimension()) {
+			this.parent.ResetGame ();
+		} else {
+			this.parent.GraphicsUpdate ();
+		}
+		this.Close ();
+	}
+
+	private void CancelFunction(object sender, EventArgs e)
+	{
+		this.Close ();
 	}
 
 	private void ButtonInit(int y)
@@ -491,8 +551,17 @@ public class ConfigWindow: System.Windows.Forms.Form
 		buttonPanel.BorderStyle = BorderStyle.FixedSingle;
 		this.Controls.Add (buttonPanel);
 
-		Button applyButton = new Button ();
+		applyButton = new Button ();
 		applyButton.Text = "Apply";
+		applyButton.Click += ApplyFunction;
+		buttonPanel.Controls.Add (applyButton);
+
+		cancelButton = new Button ();
+		cancelButton.Text = "Cancel";
+		cancelButton.Location = new Point (applyButton.Right, applyButton.Top);
+		cancelButton.Click += CancelFunction;
+		buttonPanel.Controls.Add (cancelButton);
+
 	}
 
 	private void SquareSizeInit(int y)
@@ -508,13 +577,14 @@ public class ConfigWindow: System.Windows.Forms.Form
 		int setSquareSizeLabelX = 0;
 		int setSquareSizeLabelY = 0;
 		setSquareSizeLabel.Location = new Point (setSquareSizeLabelX, setSquareSizeLabelY);
-		setSquareSizeLabel.Text = "Set square size (px):";
+		setSquareSizeLabel.Text = @"Set square size (px):";
 		setSquareSizeLabel.AutoSize = true;
 		setSquareSizeLabel.BorderStyle = BorderStyle.FixedSingle;
 		setSquareSizePanel.Controls.Add (setSquareSizeLabel);
 
-		NumericUpDown setSquareSizeField = new NumericUpDown ();
+		setSquareSizeField = new NumericUpDown ();
 		int setSquareSizeFieldX = setSquareSizeLabel.Right + 5;
+		setSquareSizeField.Value = this.parent.GetSquareSpacing();
 		setSquareSizeField.Location = new Point (setSquareSizeFieldX, setSquareSizeLabelY);
 		setSquareSizeField.BorderStyle = BorderStyle.FixedSingle;
 		setSquareSizePanel.Controls.Add (setSquareSizeField);
@@ -530,7 +600,7 @@ public class ConfigWindow: System.Windows.Forms.Form
 		this.Controls.Add (setDimPanel);
 
 		Label setDimLabel = new Label ();
-		setDimLabel.Text = "Set grid dimensions:";
+		setDimLabel.Text = @"Set grid dimensions:";
 
 		int setDimLabelX = 0;
 		int setDimLabelY = 0;
@@ -540,9 +610,9 @@ public class ConfigWindow: System.Windows.Forms.Form
 
 		setDimLabel.BorderStyle = BorderStyle.FixedSingle;
 
-		NumericUpDown setDimField = new NumericUpDown ();
+		setDimField = new NumericUpDown ();
 		int setDimFieldX = setDimLabel.Right + 5;
-
+		setDimField.Value = parent.GetGridDimension ();
 		setDimField.Location = new Point (setDimFieldX, setDimLabelY);
 		setDimField.BorderStyle = BorderStyle.FixedSingle;
 		setDimPanel.Controls.Add (setDimField);
